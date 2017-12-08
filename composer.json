@@ -1,0 +1,24 @@
+{
+    "name": "elstc/codeception-cakefixture",
+    "description": "CakePHP Fixture loader for Codeception",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=5.6",
+        "codeception/codeception": "^2.3"
+    },
+    "require-dev": {
+        "cakephp/cakephp": "^3.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Codeception\\Module\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Codeception\\Module\\CakeFixture\\Test\\": "tests/_support",
+            "Cake\\Test\\": "vendor/cakephp/cakephp/tests/"
+        }
+    }
+}
