@@ -58,7 +58,7 @@ class AwesomeCest
         'app.Posts',
     ];
 
-	// ...
+    // ...
 }
 ```
 
@@ -67,19 +67,19 @@ You can use `$autoFixtures`, `$dropTables` property, and `loadFixtures()` method
 ```(php)
 class AwesomeCest
 {
-	public $autoFixtures = false;
-	public $dropTables = false;
+    public $autoFixtures = false;
+    public $dropTables = false;
     public $fixtures = [
         'app.Users',
         'app.Posts',
     ];
 
-	public function tryYourSenario($I)
-	{
-		// load fixtures manually
-		$I->loadFixtures('Users');
-		// ...
-	}
+    public function tryYourSenario($I)
+    {
+        // load fixtures manually
+        $I->loadFixtures('Users');
+        // ...
+    }
 }
 ```
 
