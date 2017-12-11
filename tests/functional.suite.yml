@@ -1,0 +1,7 @@
+# Codeception Test Suite Configuration
+namespace: Codeception\Module\CakeFixture\Test
+class_name: FunctionalTester
+modules:
+    enabled:
+        - Db
+        - CakeFixture
