@@ -139,7 +139,7 @@ class CakeFixture extends Module
     }
 
     /**
-     * check test class has $fixtures
+     * check the test class has $fixtures
      *
      * @param Cest $test a Cest object
      * @return bool
@@ -150,7 +150,7 @@ class CakeFixture extends Module
     }
 
     /**
-     * set required properties to test class
+     * set required properties to a given test class
      *
      * @param stdClass $testClass Target test case
      * @return stdClass
