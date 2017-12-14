@@ -19,3 +19,4 @@ modules:
            populate: true
            cleanup: true
            reconnect: true
+           dump: 'tests/_data/dump.sql'

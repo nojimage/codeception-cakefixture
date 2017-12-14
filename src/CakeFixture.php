@@ -88,6 +88,7 @@ class CakeFixture extends Module
     {
         if ($this->hasFixtures($test)) {
             $this->debugSection('Fixture', 'Test class is: ' . get_class($test->getTestClass()));
+            $this->shutDownIfDbModuleLoaded();
             $this->testCase = $this->setRequireProperties($test->getTestClass());
             $this->fixtureManager->fixturize($this->testCase);
 
@@ -165,5 +166,25 @@ class CakeFixture extends Module
         }
 
         return $testClass;
+    }
+
+    /**
+     * Shutdown FixtureManager if Db module loaded
+     *
+     * @return void
+     */
+    private function shutDownIfDbModuleLoaded()
+    {
+        if (!$this->hasModule('Db')) {
+            return;
+        }
+
+        $db = $this->getModule('Db');
+        /* @var $db Db */
+
+        if ($db->_getConfig('cleanup') && $db->isPopulated()) {
+            // Shutdown FixtureManager, If reseted database by Db modle
+            $this->fixtureManager->shutDown();
+        }
     }
 }
