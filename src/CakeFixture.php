@@ -170,11 +170,13 @@ class CakeFixture extends Module
 
     /**
      * Shutdown FixtureManager if Db module loaded
+     *
+     * @return void
      */
     private function shutDownIfDbModuleLoaded()
     {
         if (!$this->hasModule('Db')) {
-            return false;
+            return;
         }
 
         $db = $this->getModule('Db');
