@@ -138,8 +138,9 @@ class CakeFixture extends Module
     public function loadFixtures()
     {
         if (!$this->testCase) {
-            throw new ModuleException(__CLASS__, 'Can\'t load fixtures. the fixtures not initialized,'
-                . ' You should call $I->useFixtures() before using this method.');
+            $message = 'Can\'t load fixtures. the fixtures not initialized,';
+            $message .= ' You should call $I->useFixtures() before using this method.';
+            throw new ModuleException(__CLASS__, $message);
         }
 
         $args = $this->flattenFixureArgs(func_get_args());
@@ -185,7 +186,7 @@ class CakeFixture extends Module
     /**
      * flatten args
      *
-     * @param array $args
+     * @param array $args received function args
      * @return array
      */
     private function flattenFixureArgs(array $args)
