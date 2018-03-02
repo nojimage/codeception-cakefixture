@@ -17,6 +17,7 @@ class FixtureLoadCest
 
     public $fixtures = [
         'core.Authors',
+        'core.Posts',
     ];
 
     /**
@@ -27,5 +28,8 @@ class FixtureLoadCest
         $I->wantTo('loading the Authors fixture');
         $I->loadFixtures('Authors');
         $I->seeInDatabase('authors', ['id' => 1, 'name' => 'mariano']);
+
+        $I->loadFixtures();
+        $I->seeInDatabase('posts', ['author_id' => 1, 'title' => 'First Post']);
     }
 }

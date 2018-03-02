@@ -86,10 +86,11 @@ class CakeFixture extends Module
     // @codingStandardsIgnoreStart
     public function _before(TestInterface $test)// @codingStandardsIgnoreEnd
     {
-        if ($this->hasFixtures($test)) {
+        if ($this->isCestHasFixtures($test)) {
+            // Cest has $fixtures property
             $this->debugSection('Fixture', 'Test class is: ' . get_class($test->getTestClass()));
             $this->shutDownIfDbModuleLoaded();
-            $this->testCase = $this->setRequireProperties($test->getTestClass());
+            $this->testCase = $this->generateTestCase($test->getTestClass());
             $this->fixtureManager->fixturize($this->testCase);
 
             $this->debugSection('Fixture', 'Load fixtures: ' . implode(', ', $this->testCase->fixtures));
@@ -106,9 +107,9 @@ class CakeFixture extends Module
     // @codingStandardsIgnoreStart
     public function _after(TestInterface $test)// @codingStandardsIgnoreEnd
     {
-        if ($this->hasFixtures($test)) {
-            $this->debugSection('Fixture', 'Unload fixtures: ' . implode(', ', $test->getTestClass()->fixtures));
-            $this->fixtureManager->unload($test->getTestClass());
+        if ($this->testCase) {
+            $this->debugSection('Fixture', 'Unload fixtures: ' . implode(', ', $this->testCase->fixtures));
+            $this->fixtureManager->unload($this->testCase);
         }
 
         $this->testCase = null;
@@ -134,7 +135,7 @@ class CakeFixture extends Module
         if (empty($args)) {
             $autoFixtures = $this->testCase->autoFixtures;
             $this->testCase->autoFixtures = true;
-            $this->fixtureManager->load($this);
+            $this->fixtureManager->load($this->testCase);
             $this->testCase->autoFixtures = $autoFixtures;
         }
     }
@@ -142,10 +143,10 @@ class CakeFixture extends Module
     /**
      * check the test class has $fixtures
      *
-     * @param Cest $test a Cest object
+     * @param TestInterface $test a Test object
      * @return bool
      */
-    private function hasFixtures($test)
+    private function isCestHasFixtures($test)
     {
         return $test instanceof Cest && property_exists($test->getTestClass(), 'fixtures');
     }
@@ -156,13 +157,16 @@ class CakeFixture extends Module
      * @param stdClass $testClass Target test case
      * @return stdClass
      */
-    private function setRequireProperties($testClass)
+    private function generateTestCase($testClass)
     {
         if (!property_exists($testClass, 'autoFixtures')) {
             $testClass->autoFixtures = $this->_getConfig('autoFixtures');
         }
         if (!property_exists($testClass, 'dropTables')) {
             $testClass->dropTables = $this->_getConfig('dropTables');
+        }
+        if (!property_exists($testClass, 'fixtures')) {
+            $testClass->fixtures = [];
         }
 
         return $testClass;
