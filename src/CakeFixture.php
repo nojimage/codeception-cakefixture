@@ -8,11 +8,12 @@
 namespace Codeception\Module;
 
 use Cake\TestSuite\Fixture\FixtureManager;
+use Codeception\Exception\ModuleException;
 use Codeception\Module;
 use Codeception\TestInterface;
 use Codeception\Test\Cest;
 use Exception;
-use stdClass;
+use PHPUnit_Framework_MockObject_Generator;
 
 /**
  * CakePHP Fixture Module
@@ -123,11 +124,17 @@ class CakeFixture extends Module
      *
      * @return void
      * @see Cake\TestSuite\TestCase::loadFixtures()
-     * @throws Exception when no fixture manager is available.
+     * @throws Exception when testCase not initialized
      */
     public function loadFixtures()
     {
-        $args = func_get_args();
+        if (!$this->testCase) {
+            throw new ModuleException(__CLASS__, 'Can\'t load fixtures. the fixtures not initialized,'
+                . ' You should call $I->useFixtures() before using this method.');
+        }
+
+        $args = $this->flattenFixureArgs(func_get_args());
+
         foreach ($args as $class) {
             $this->fixtureManager->loadSingle($class, null, $this->testCase->dropTables);
         }
@@ -138,6 +145,68 @@ class CakeFixture extends Module
             $this->fixtureManager->load($this->testCase);
             $this->testCase->autoFixtures = $autoFixtures;
         }
+    }
+
+    /**
+     * Setup fixtures to load for a given test case
+     *
+     * Each parameter is a fixture specific name, like CakePHP's
+     * TestCase::$fixtures, i.e. 'app.posts', 'app.authors', etc.
+     *
+     * @return void
+     * @throws Exception when no fixture manager is available.
+     */
+    public function useFixtures()
+    {
+        $args = $this->flattenFixureArgs(func_get_args());
+
+        $holder = $this->getFixtureHolder();
+        $testCase = $this->generateTestCase($holder);
+        $testCase->fixtures = $args;
+
+        if ($this->testCase) {
+            $previousTestCase = $this->testCase;
+            $testCase->autoFixtures = $previousTestCase->autoFixtures;
+            $testCase->dropTables = $previousTestCase->dropTables;
+            $testCase->fixtures = array_unique(array_merge($testCase->fixtures, $previousTestCase->fixtures));
+        }
+        $this->testCase = $testCase;
+
+        $this->fixtureManager->fixturize($this->testCase);
+        $this->debugSection('Fixture', 'Use fixtures: ' . implode(', ', $this->testCase->fixtures));
+    }
+
+    /**
+     * flatten args
+     *
+     * @param array $args
+     * @return array
+     */
+    private function flattenFixureArgs(array $args)
+    {
+        $normalized = [];
+
+        foreach ($args as $arg) {
+            if (is_array($arg)) {
+                $normalized += $arg;
+            } else {
+                $normalized[] = $arg;
+            }
+        }
+
+        return array_unique($normalized);
+    }
+
+    /**
+     * generate temporary fixture holder
+     *
+     * @return \stdClass
+     */
+    private function getFixtureHolder()
+    {
+        $className = 'CakeFixtureMock_' . hash('md5', microtime(true));
+
+        return (new PHPUnit_Framework_MockObject_Generator)->getMock('\stdClass', [], [], $className);
     }
 
     /**
