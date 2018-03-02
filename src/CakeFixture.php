@@ -50,6 +50,13 @@ class CakeFixture extends Module
     protected $testCase;
 
     /**
+     * Current test filename
+     *
+     * @var string
+     */
+    protected $testFilename;
+
+    /**
      * Load FixtureManager
      *
      * @return void
@@ -87,6 +94,8 @@ class CakeFixture extends Module
     // @codingStandardsIgnoreStart
     public function _before(TestInterface $test)// @codingStandardsIgnoreEnd
     {
+        $this->testFilename = $test->getMetadata()->getFilename();
+
         if ($this->isCestHasFixtures($test)) {
             // Cest has $fixtures property
             $this->debugSection('Fixture', 'Test class is: ' . get_class($test->getTestClass()));
@@ -158,18 +167,15 @@ class CakeFixture extends Module
      */
     public function useFixtures()
     {
+        if ($this->testCase) {
+            throw new ModuleException(__CLASS__, 'Already fixtures initialized, in the test.');
+        }
+
         $args = $this->flattenFixureArgs(func_get_args());
 
         $holder = $this->getFixtureHolder();
         $testCase = $this->generateTestCase($holder);
         $testCase->fixtures = $args;
-
-        if ($this->testCase) {
-            $previousTestCase = $this->testCase;
-            $testCase->autoFixtures = $previousTestCase->autoFixtures;
-            $testCase->dropTables = $previousTestCase->dropTables;
-            $testCase->fixtures = array_unique(array_merge($testCase->fixtures, $previousTestCase->fixtures));
-        }
         $this->testCase = $testCase;
 
         $this->fixtureManager->fixturize($this->testCase);
@@ -204,7 +210,7 @@ class CakeFixture extends Module
      */
     private function getFixtureHolder()
     {
-        $className = 'CakeFixtureMock_' . hash('md5', microtime(true));
+        $className = 'CakeFixtureMock_' . hash('md5', $this->testFilename);
 
         return (new PHPUnit_Framework_MockObject_Generator)->getMock('\stdClass', [], [], $className);
     }
