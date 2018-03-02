@@ -10,14 +10,13 @@ namespace Codeception\Module\CakeFixture\Test;
 /**
  * Test for CakeFixture::loadFixtures()
  */
-class FixtureLoadCest
+class LoadFixturesCest
 {
 
     public $autoFixtures = false;
 
     public $fixtures = [
-        'core.Authors',
-        'core.Posts',
+        'core.tags',
     ];
 
     /**
@@ -25,7 +24,10 @@ class FixtureLoadCest
      */
     public function tryLoadFixtures(FunctionalTester $I)
     {
-        $I->wantTo('loading the Authors fixture');
+        $I->loadFixtures('Tags');
+        $I->seeInDatabase('tags', ['name' => 'tag1', 'description' => 'A big description']);
+
+        $I->useFixtures(['core.authors', 'core.posts']);
         $I->loadFixtures('Authors');
         $I->seeInDatabase('authors', ['id' => 1, 'name' => 'mariano']);
 
