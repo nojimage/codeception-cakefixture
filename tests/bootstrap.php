@@ -5,7 +5,8 @@
 // fixes class conflict on PHPUnit >= 5.7
 if (class_exists('\PHPUnit\Runner\Version') && version_compare(\PHPUnit\Runner\Version::id(), '5.7', '>=') &&
     !function_exists('loadPHPUnitAliases')) {
-    function loadPHPUnitAliases() {
+    function loadPHPUnitAliases()
+    {
         // nothing to do
     }
 }

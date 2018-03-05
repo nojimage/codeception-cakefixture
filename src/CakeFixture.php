@@ -43,11 +43,11 @@ class CakeFixture extends Module
     protected $fixtureManager;
 
     /**
-     * Current TestCase
+     * Current fixture holder
      *
      * @var stdClass
      */
-    protected $testCase;
+    protected $fixtureHolder;
 
     /**
      * Current test filename
@@ -80,7 +80,7 @@ class CakeFixture extends Module
     // @codingStandardsIgnoreStart
     public function _afterSuite()// @codingStandardsIgnoreEnd
     {
-        $this->testCase = null;
+        $this->fixtureHolder = null;
         $this->fixtureManager->shutDown();
         $this->debugSection('Fixture', 'FixtureManager shutDown');
     }
@@ -97,14 +97,14 @@ class CakeFixture extends Module
         $this->testFilename = $test->getMetadata()->getFilename();
 
         if ($this->isCestHasFixtures($test)) {
-            // Cest has $fixtures property
+            // Cest has $fixtures property, then initialize and load fixtures
             $this->debugSection('Fixture', 'Test class is: ' . get_class($test->getTestClass()));
             $this->shutDownIfDbModuleLoaded();
-            $this->testCase = $this->generateTestCase($test->getTestClass());
-            $this->fixtureManager->fixturize($this->testCase);
+            $this->fixtureHolder = $this->setupFixtureHolder($test->getTestClass());
+            $this->fixtureManager->fixturize($this->fixtureHolder);
 
-            $this->debugSection('Fixture', 'Load fixtures: ' . implode(', ', $this->testCase->fixtures));
-            $this->fixtureManager->load($this->testCase);
+            $this->debugSection('Fixture', 'Load fixtures: ' . implode(', ', $this->fixtureHolder->fixtures));
+            $this->fixtureManager->load($this->fixtureHolder);
         }
     }
 
@@ -117,12 +117,12 @@ class CakeFixture extends Module
     // @codingStandardsIgnoreStart
     public function _after(TestInterface $test)// @codingStandardsIgnoreEnd
     {
-        if ($this->testCase) {
-            $this->debugSection('Fixture', 'Unload fixtures: ' . implode(', ', $this->testCase->fixtures));
-            $this->fixtureManager->unload($this->testCase);
+        if ($this->fixtureHolder) {
+            $this->debugSection('Fixture', 'Unload fixtures: ' . implode(', ', $this->fixtureHolder->fixtures));
+            $this->fixtureManager->unload($this->fixtureHolder);
         }
 
-        $this->testCase = null;
+        $this->fixtureHolder = null;
     }
 
     /**
@@ -137,7 +137,7 @@ class CakeFixture extends Module
      */
     public function loadFixtures()
     {
-        if (!$this->testCase) {
+        if (!$this->fixtureHolder) {
             $message = 'Can\'t load fixtures. the fixtures not initialized,';
             $message .= ' You should call $I->useFixtures() before using this method.';
             throw new ModuleException(__CLASS__, $message);
@@ -146,14 +146,14 @@ class CakeFixture extends Module
         $args = $this->flattenFixureArgs(func_get_args());
 
         foreach ($args as $class) {
-            $this->fixtureManager->loadSingle($class, null, $this->testCase->dropTables);
+            $this->fixtureManager->loadSingle($class, null, $this->fixtureHolder->dropTables);
         }
 
         if (empty($args)) {
-            $autoFixtures = $this->testCase->autoFixtures;
-            $this->testCase->autoFixtures = true;
-            $this->fixtureManager->load($this->testCase);
-            $this->testCase->autoFixtures = $autoFixtures;
+            $autoFixtures = $this->fixtureHolder->autoFixtures;
+            $this->fixtureHolder->autoFixtures = true;
+            $this->fixtureManager->load($this->fixtureHolder);
+            $this->fixtureHolder->autoFixtures = $autoFixtures;
         }
     }
 
@@ -168,19 +168,19 @@ class CakeFixture extends Module
      */
     public function useFixtures()
     {
-        if ($this->testCase) {
+        if ($this->fixtureHolder) {
             throw new ModuleException(__CLASS__, 'Already fixtures initialized, in the test.');
         }
 
         $args = $this->flattenFixureArgs(func_get_args());
 
         $holder = $this->getFixtureHolder();
-        $testCase = $this->generateTestCase($holder);
+        $testCase = $this->setupFixtureHolder($holder);
         $testCase->fixtures = $args;
-        $this->testCase = $testCase;
+        $this->fixtureHolder = $testCase;
 
-        $this->fixtureManager->fixturize($this->testCase);
-        $this->debugSection('Fixture', 'Use fixtures: ' . implode(', ', $this->testCase->fixtures));
+        $this->fixtureManager->fixturize($this->fixtureHolder);
+        $this->debugSection('Fixture', 'Use fixtures: ' . implode(', ', $this->fixtureHolder->fixtures));
     }
 
     /**
@@ -233,7 +233,7 @@ class CakeFixture extends Module
      * @param stdClass $testClass Target test case
      * @return stdClass
      */
-    private function generateTestCase($testClass)
+    private function setupFixtureHolder($testClass)
     {
         if (!property_exists($testClass, 'autoFixtures')) {
             $testClass->autoFixtures = $this->_getConfig('autoFixtures');
