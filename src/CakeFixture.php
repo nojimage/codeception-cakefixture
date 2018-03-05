@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * Copyright 2017 ELASTIC Consultants Inc.
+ * Copyright 2018 ELASTIC Consultants Inc.
  *
  */
 
